@@ -1,8 +1,5 @@
 # VAST Javascript Client (SP version)
 
-[![Build Status](https://travis-ci.org/dailymotion/vast-client-js.png)](https://travis-ci.org/dailymotion/vast-client-js)
-
-
 ## Build
 
     $ npm install
