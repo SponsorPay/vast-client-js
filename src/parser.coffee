@@ -33,7 +33,6 @@ class VASTParser
                         response.ads.push ad
                     else
                         # VAST version of response not supported.
-                        VASTUtil.track(response.errorURLTemplates, ERRORCODE: 101)
 
             complete = =>
                 return unless response
@@ -44,7 +43,6 @@ class VASTParser
                     # The VAST <Error> element is optional but if included, the video player must send a request to the URI
                     # provided when the VAST response returns an empty InLine response after a chain of one or more wrapper ads.
                     # If an [ERRORCODE] macro is included, the video player should substitute with error code 303.
-                    VASTUtil.track(response.errorURLTemplates, ERRORCODE: 303)
                     response = null
                 cb(null, response)
 
@@ -54,7 +52,6 @@ class VASTParser
                 if parentURLs.length >= 10 or ad.nextWrapperURL in parentURLs
                     # Wrapper limit reached, as defined by the video player.
                     # Too many Wrapper responses have been received with no InLine response.
-                    VASTUtil.track(ad.errorURLTemplates, ERRORCODE: 302)
                     response.ads.splice(response.ads.indexOf(ad), 1)
                     complete()
                     break
@@ -68,11 +65,9 @@ class VASTParser
                     if err?
                         # Timeout of VAST URI provided in Wrapper element, or of VAST URI provided in a subsequent Wrapper element.
                         # (URI was either unavailable or reached a timeout as defined by the video player.)
-                        VASTUtil.track(ad.errorURLTemplates, ERRORCODE: 301)
                         response.ads.splice(response.ads.indexOf(ad), 1)
                     else if not wrappedResponse?
                         # No Ads VAST response after one or more Wrappers
-                        VASTUtil.track(ad.errorURLTemplates, ERRORCODE: 303)
                         response.ads.splice(response.ads.indexOf(ad), 1)
                     else
                         response.errorURLTemplates = response.errorURLTemplates.concat wrappedResponse.errorURLTemplates
