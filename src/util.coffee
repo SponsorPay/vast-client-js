@@ -1,13 +1,4 @@
 class VASTUtil
-    @track: (URLTemplates, variables) ->
-        URLs = @resolveURLTemplates(URLTemplates, variables)
-        for URL in URLs
-            if window?
-                i = new Image()
-                i.src = URL
-            else
-                # node mode, do not track (unit test only)
-
     @resolveURLTemplates: (URLTemplates, variables) ->
         URLs = []
 

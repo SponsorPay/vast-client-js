@@ -1,7 +1,6 @@
 URLHandler = require './urlhandler'
 VASTResponse = require './response'
 VASTAd = require './ad'
-VASTUtil = require './util'
 VASTCreativeLinear = require('./creative').VASTCreativeLinear
 VASTCreativeCompanion = require('./creative').VASTCreativeCompanion
 VASTCreativeNonLinear = require('./creative').VASTCreativeNonLinear
@@ -32,7 +31,6 @@ class VASTParser
     @vent = new EventEmitter()
     @track: (templates, errorCode) ->
         @vent.emit 'VAST-error', errorCode
-        VASTUtil.track(templates, errorCode)
 
     @on: (eventName, cb) ->
         @vent.on eventName, cb
