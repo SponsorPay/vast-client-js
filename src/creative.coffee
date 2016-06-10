@@ -7,15 +7,25 @@ class VASTCreativeLinear extends VASTCreative
         super
         @type = "linear"
         @duration = 0
-        @skipDelay = -1
+        @skipDelay = null
         @mediaFiles = []
         @videoClickThroughURLTemplate = null
-        @videoClickTrackingURLTemplate = null
+        @videoClickTrackingURLTemplates = []
+        @videoCustomClickURLTemplates = []
+        @adParameters = null
 
 class VASTCreativeNonLinear extends VASTCreative
-
+    constructor: ->
+        super
+        @type = "nonlinear"
+        @variations = []
+        @videoClickTrackingURLTemplates = []
 
 class VASTCreativeCompanion extends VASTCreative
+    constructor: ->
+        @type = "companion"
+        @variations = []
+        @videoClickTrackingURLTemplates = []
 
 module.exports =
     VASTCreativeLinear: VASTCreativeLinear

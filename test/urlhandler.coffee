@@ -3,7 +3,7 @@ path = require 'path'
 URLHandler = require '../src/urlhandler'
 
 urlfor = (relpath) ->
-    return 'file://' + path.resolve(path.dirname(module.filename), relpath)
+    return 'file://' + path.resolve(path.dirname(module.filename), relpath).replace(/\\/g, '/')
 
 describe 'URLHandler', ->
     describe '#get', ->
@@ -14,7 +14,7 @@ describe 'URLHandler', ->
                 xml.documentElement.nodeName.should.equal 'VAST'
                 done()
 
-        it 'should return error if not found', (done) =>
+        it 'should return an error if not found', (done) =>
             URLHandler.get urlfor('not-found.xml'), (err, xml) ->
                 should.exists err
                 should.not.exist xml

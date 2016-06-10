@@ -1,5 +1,6 @@
 class VASTMediaFile
     constructor: ->
+        @id = null
         @fileURL = null
         @deliveryType = "progressive"
         @mimeType = null
@@ -9,5 +10,8 @@ class VASTMediaFile
         @maxBitrate = 0
         @width = 0
         @height = 0
+        @apiFramework = null
+        @scalable = null
+        @maintainAspectRatio = null
 
 module.exports = VASTMediaFile
