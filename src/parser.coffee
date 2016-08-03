@@ -340,6 +340,7 @@ class VASTParser
             companionAd.id = companionResource.getAttribute("id") or null
             companionAd.width = companionResource.getAttribute("width")
             companionAd.height = companionResource.getAttribute("height")
+            companionAd.companionClickTrackingURLTemplates = []
             for htmlElement in @childsByName(companionResource, "HTMLResource")
                 companionAd.type = htmlElement.getAttribute("creativeType") or 'text/html'
                 companionAd.htmlResource = @parseNodeText(htmlElement)
@@ -356,8 +357,10 @@ class VASTParser
                     if eventName? and trackingURLTemplate?
                         companionAd.trackingEvents[eventName] ?= []
                         companionAd.trackingEvents[eventName].push trackingURLTemplate
+            for clickTrackingElement in @childsByName(companionResource, "CompanionClickTracking")
+              companionAd.companionClickTrackingURLTemplates.push @parseNodeText(clickTrackingElement)
             companionAd.companionClickThroughURLTemplate = @parseNodeText(@childByName(companionResource, "CompanionClickThrough"))
-            companionAd.companionClickTrackingURLTemplate = @parseNodeText(@childByName(companionResource, "CompanionClickTracking"))
+
             creative.variations.push companionAd
 
         return creative
