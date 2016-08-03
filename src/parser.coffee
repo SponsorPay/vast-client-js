@@ -357,6 +357,7 @@ class VASTParser
                         companionAd.trackingEvents[eventName] ?= []
                         companionAd.trackingEvents[eventName].push trackingURLTemplate
             companionAd.companionClickThroughURLTemplate = @parseNodeText(@childByName(companionResource, "CompanionClickThrough"))
+            companionAd.companionClickTrackingURLTemplate = @parseNodeText(@childByName(companionResource, "CompanionClickTracking"))
             creative.variations.push companionAd
 
         return creative

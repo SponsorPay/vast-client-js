@@ -4,6 +4,17 @@
 
 Complies with [VAST 3.0 spec](http://www.iab.net/media/file/VASTv3.0.pdf).
 
+# Fyber Custom Modifications
+
+At the time of writing, the official client does not support the CompanionClickTracking
+property in VAST companion ad tags
+(see [the VAST spec](http://www.iab.com/wp-content/uploads/2015/06/VASTv3_0.pdf)
+for details). Only a single-line patch in the
+[parser script](https://github.com/SponsorPay/vast-client-js/blob/master/src/parser.coffee#L359)
+was required, so for now this is a custom modification.
+[An issue is open](https://github.com/dailymotion/vast-client-js/issues/107) on
+the main project so it's possible this change can be reverted soon.
+
 ## Build / Contribute
 
 See [CONTRIBUTING](CONTRIBUTING.md)
