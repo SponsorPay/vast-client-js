@@ -183,9 +183,11 @@ describe 'VASTParser', ->
     describe '#track', ->
         errorCallbackCalled = 0
         errorCode = null
-        errorCallback = (ec) ->
+        errorURLTemplates = null
+        errorCallback = (templates, ec) ->
             errorCallbackCalled++
             errorCode = ec
+            errorURLTemplates = templates
 
         beforeEach =>
             VASTParser.vent.removeAllListeners()
@@ -197,6 +199,7 @@ describe 'VASTParser', ->
             VASTParser.parse urlfor('empty.xml'), =>
                 errorCallbackCalled.should.equal 1
                 errorCode.ERRORCODE.should.eql 303
+                errorURLTemplates.should.eql []
                 done()
 
         #No ads VAST response after more than one wrapper
