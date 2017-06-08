@@ -30,7 +30,7 @@ class VASTParser
 
     @vent = new EventEmitter()
     @track: (templates, errorCode) ->
-        @vent.emit 'VAST-error', errorCode
+        @vent.emit 'VAST-error', templates, errorCode
 
     @on: (eventName, cb) ->
         @vent.on eventName, cb

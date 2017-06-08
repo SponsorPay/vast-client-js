@@ -622,7 +622,7 @@ VASTParser = (function() {
   VASTParser.vent = new EventEmitter();
 
   VASTParser.track = function(templates, errorCode) {
-    return this.vent.emit('VAST-error', errorCode);
+    return this.vent.emit('VAST-error', templates, errorCode);
   };
 
   VASTParser.on = function(eventName, cb) {
@@ -1062,7 +1062,7 @@ VASTParser = (function() {
   };
 
   VASTParser.parseCompanionAd = function(creativeElement) {
-    var companionAd, companionResource, creative, eventName, htmlElement, iframeElement, staticElement, trackingElement, trackingEventsElement, trackingURLTemplate, _base, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _m, _n, _ref, _ref1, _ref2, _ref3, _ref4, _ref5;
+    var clickTrackingElement, companionAd, companionResource, creative, eventName, htmlElement, iframeElement, staticElement, trackingElement, trackingEventsElement, trackingURLTemplate, _base, _i, _j, _k, _l, _len, _len1, _len2, _len3, _len4, _len5, _len6, _m, _n, _o, _ref, _ref1, _ref2, _ref3, _ref4, _ref5, _ref6;
     creative = new VASTCreativeCompanion();
     _ref = this.childsByName(creativeElement, "Companion");
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -1071,6 +1071,7 @@ VASTParser = (function() {
       companionAd.id = companionResource.getAttribute("id") || null;
       companionAd.width = companionResource.getAttribute("width");
       companionAd.height = companionResource.getAttribute("height");
+      companionAd.companionClickTrackingURLTemplates = [];
       _ref1 = this.childsByName(companionResource, "HTMLResource");
       for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
         htmlElement = _ref1[_j];
@@ -1104,6 +1105,11 @@ VASTParser = (function() {
             companionAd.trackingEvents[eventName].push(trackingURLTemplate);
           }
         }
+      }
+      _ref6 = this.childsByName(companionResource, "CompanionClickTracking");
+      for (_o = 0, _len6 = _ref6.length; _o < _len6; _o++) {
+        clickTrackingElement = _ref6[_o];
+        companionAd.companionClickTrackingURLTemplates.push(this.parseNodeText(clickTrackingElement));
       }
       companionAd.companionClickThroughURLTemplate = this.parseNodeText(this.childByName(companionResource, "CompanionClickThrough"));
       creative.variations.push(companionAd);
