@@ -1,7 +1,7 @@
 {
   "name": "vast-client",
   "author": "Olivier Poitrey <rs@dailymotion.com>",
-  "version": "1.4.0",
+  "version": "1.8.0-fyber",
   "description": "Javascript VAST Client",
   "keywords": [
     "vast",
@@ -31,12 +31,13 @@
     "postinstall": "coffee --compile --output dist/ src/"
   },
   "devDependencies": {
-    "mocha": "1.18.2",
-    "should": "3.2.0",
-    "xmldom": "0.1.19"
+    "mocha": "^3.4.2",
+    "should": "^11.2.1",
+    "sinon": "^2.3.6"
   },
   "dependencies": {
-    "coffee-script": "~1.7.1",
-    "browserify": "4.2.1"
+    "coffee-script": "~1.12.6",
+    "browserify": "~14.4.0",
+    "xmldom": "~0.1.27"
   }
 }
