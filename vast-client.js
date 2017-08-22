@@ -719,6 +719,16 @@ VASTParser = (function() {
     });
   };
 
+  VASTParser.load = function(xml, options, cb) {
+    if (!cb) {
+      if (typeof options === 'function') {
+        cb = options;
+      }
+      options = {};
+    }
+    return this.parseXmlDocument(null, [], options, xml, cb);
+  };
+
   VASTParser.vent = new EventEmitter();
 
   VASTParser.track = function(templates, errorCode) {
@@ -731,6 +741,10 @@ VASTParser = (function() {
 
   VASTParser.once = function(eventName, cb) {
     return this.vent.once(eventName, cb);
+  };
+
+  VASTParser.off = function(eventName, cb) {
+    return this.vent.removeListener(eventName, cb);
   };
 
   VASTParser._parse = function(url, parentURLs, options, cb) {
@@ -751,167 +765,189 @@ VASTParser = (function() {
     parentURLs.push(url);
     return URLHandler.get(url, options, (function(_this) {
       return function(err, xml) {
-        var ad, complete, j, k, len1, len2, loopIndex, node, ref, ref1, response;
         if (err != null) {
           return cb(err);
         }
-        response = new VASTResponse();
-        if (!(((xml != null ? xml.documentElement : void 0) != null) && xml.documentElement.nodeName === "VAST")) {
-          return cb(new Error('Invalid VAST XMLDocument'));
-        }
-        ref = xml.documentElement.childNodes;
-        for (j = 0, len1 = ref.length; j < len1; j++) {
-          node = ref[j];
-          if (node.nodeName === 'Error') {
-            response.errorURLTemplates.push(_this.parseNodeText(node));
-          }
-        }
-        ref1 = xml.documentElement.childNodes;
-        for (k = 0, len2 = ref1.length; k < len2; k++) {
-          node = ref1[k];
-          if (node.nodeName === 'Ad') {
-            ad = _this.parseAdElement(node);
-            if (ad != null) {
-              response.ads.push(ad);
-            } else {
-              _this.track(response.errorURLTemplates, {
-                ERRORCODE: 101
-              });
-            }
-          }
-        }
-        complete = function(error, errorAlreadyRaised) {
-          var l, len3, noCreatives, ref2;
-          if (error == null) {
-            error = null;
-          }
-          if (errorAlreadyRaised == null) {
-            errorAlreadyRaised = false;
-          }
-          if (!response) {
-            return;
-          }
-          noCreatives = true;
-          ref2 = response.ads;
-          for (l = 0, len3 = ref2.length; l < len3; l++) {
-            ad = ref2[l];
-            if (ad.nextWrapperURL != null) {
-              return;
-            }
-            if (ad.creatives.length > 0) {
-              noCreatives = false;
-            }
-          }
-          if (noCreatives) {
-            if (!errorAlreadyRaised) {
-              _this.track(response.errorURLTemplates, {
-                ERRORCODE: 303
-              });
-            }
-          }
-          if (response.ads.length === 0) {
-            response = null;
-          }
-          return cb(error, response);
-        };
-        loopIndex = response.ads.length;
-        while (loopIndex--) {
-          ad = response.ads[loopIndex];
-          if (ad.nextWrapperURL == null) {
-            continue;
-          }
-          (function(ad) {
-            var baseURL, protocol, ref2;
-            if (parentURLs.length > (options.wrapperLimit !== null ? options.wrapperLimit : 9) || (ref2 = ad.nextWrapperURL, indexOf.call(parentURLs, ref2) >= 0)) {
-              _this.track(ad.errorURLTemplates, {
-                ERRORCODE: 302
-              });
-              response.ads.splice(response.ads.indexOf(ad), 1);
-              complete(new Error("Wrapper limit reached, as defined by the video player"));
-              return;
-            }
-            if (ad.nextWrapperURL.indexOf('//') === 0) {
-              protocol = location.protocol;
-              ad.nextWrapperURL = "" + protocol + ad.nextWrapperURL;
-            } else if (ad.nextWrapperURL.indexOf('://') === -1) {
-              baseURL = url.slice(0, url.lastIndexOf('/'));
-              ad.nextWrapperURL = baseURL + "/" + ad.nextWrapperURL;
-            }
-            return _this._parse(ad.nextWrapperURL, parentURLs, options, function(err, wrappedResponse) {
-              var base, creative, errorAlreadyRaised, eventName, index, l, len3, len4, len5, len6, len7, m, n, o, p, ref3, ref4, ref5, ref6, ref7, ref8, urls, wrappedAd;
-              errorAlreadyRaised = false;
-              if (err != null) {
-                _this.track(ad.errorURLTemplates, {
-                  ERRORCODE: 301
-                });
-                response.ads.splice(response.ads.indexOf(ad), 1);
-                errorAlreadyRaised = true;
-              } else if (wrappedResponse == null) {
-                _this.track(ad.errorURLTemplates, {
-                  ERRORCODE: 303
-                });
-                response.ads.splice(response.ads.indexOf(ad), 1);
-                errorAlreadyRaised = true;
-              } else {
-                response.errorURLTemplates = response.errorURLTemplates.concat(wrappedResponse.errorURLTemplates);
-                index = response.ads.indexOf(ad);
-                response.ads.splice(index, 1);
-                ref3 = wrappedResponse.ads;
-                for (l = 0, len3 = ref3.length; l < len3; l++) {
-                  wrappedAd = ref3[l];
-                  wrappedAd.errorURLTemplates = ad.errorURLTemplates.concat(wrappedAd.errorURLTemplates);
-                  wrappedAd.impressionURLTemplates = ad.impressionURLTemplates.concat(wrappedAd.impressionURLTemplates);
-                  wrappedAd.extensions = ad.extensions.concat(wrappedAd.extensions);
-                  ref4 = wrappedAd.creatives;
-                  for (m = 0, len4 = ref4.length; m < len4; m++) {
-                    creative = ref4[m];
-                    if (ad.trackingEvents[creative.type] != null) {
-                      ref5 = ad.trackingEvents[creative.type];
-                      for (eventName in ref5) {
-                        urls = ref5[eventName];
-                        (base = creative.trackingEvents)[eventName] || (base[eventName] = []);
-                        creative.trackingEvents[eventName] = creative.trackingEvents[eventName].concat(urls);
-                      }
-                    }
-                  }
-                  if (ad.videoClickTrackingURLTemplates.length) {
-                    ref6 = wrappedAd.creatives;
-                    for (n = 0, len5 = ref6.length; n < len5; n++) {
-                      creative = ref6[n];
-                      if (creative.type === 'linear') {
-                        creative.videoClickTrackingURLTemplates = creative.videoClickTrackingURLTemplates.concat(ad.videoClickTrackingURLTemplates);
-                      }
-                    }
-                  }
-                  if (ad.videoCustomClickURLTemplates.length) {
-                    ref7 = wrappedAd.creatives;
-                    for (o = 0, len6 = ref7.length; o < len6; o++) {
-                      creative = ref7[o];
-                      if (creative.type === 'linear') {
-                        creative.videoCustomClickURLTemplates = creative.videoCustomClickURLTemplates.concat(ad.videoCustomClickURLTemplates);
-                      }
-                    }
-                  }
-                  if (ad.videoClickThroughURLTemplate != null) {
-                    ref8 = wrappedAd.creatives;
-                    for (p = 0, len7 = ref8.length; p < len7; p++) {
-                      creative = ref8[p];
-                      if (creative.type === 'linear' && (creative.videoClickThroughURLTemplate == null)) {
-                        creative.videoClickThroughURLTemplate = ad.videoClickThroughURLTemplate;
-                      }
-                    }
-                  }
-                  response.ads.splice(++index, 0, wrappedAd);
-                }
-              }
-              delete ad.nextWrapperURL;
-              return complete(err, errorAlreadyRaised);
-            });
-          })(ad);
-        }
-        return complete();
+        return _this.parseXmlDocument(url, parentURLs, options, xml, cb);
       };
     })(this));
+  };
+
+  VASTParser.parseXmlDocument = function(url, parentURLs, options, xml, cb) {
+    var ad, complete, i, j, len, len1, loopIndex, node, ref, ref1, response;
+    response = new VASTResponse();
+    if (!(((xml != null ? xml.documentElement : void 0) != null) && xml.documentElement.nodeName === "VAST")) {
+      return cb(new Error('Invalid VAST XMLDocument'));
+    }
+    ref = xml.documentElement.childNodes;
+    for (i = 0, len = ref.length; i < len; i++) {
+      node = ref[i];
+      if (node.nodeName === 'Error') {
+        response.errorURLTemplates.push(VASTParser.parseNodeText(node));
+      }
+    }
+    ref1 = xml.documentElement.childNodes;
+    for (j = 0, len1 = ref1.length; j < len1; j++) {
+      node = ref1[j];
+      if (node.nodeName === 'Ad') {
+        ad = VASTParser.parseAdElement(node);
+        if (ad != null) {
+          response.ads.push(ad);
+        } else {
+          VASTParser.track(response.errorURLTemplates, {
+            ERRORCODE: 101
+          });
+        }
+      }
+    }
+    complete = function(error, errorAlreadyRaised) {
+      var k, len2, noCreatives, ref2;
+      if (error == null) {
+        error = null;
+      }
+      if (errorAlreadyRaised == null) {
+        errorAlreadyRaised = false;
+      }
+      if (!response) {
+        return;
+      }
+      noCreatives = true;
+      ref2 = response.ads;
+      for (k = 0, len2 = ref2.length; k < len2; k++) {
+        ad = ref2[k];
+        if (ad.nextWrapperURL != null) {
+          return;
+        }
+        if (ad.creatives.length > 0) {
+          noCreatives = false;
+        }
+      }
+      if (noCreatives) {
+        if (!errorAlreadyRaised) {
+          VASTParser.track(response.errorURLTemplates, {
+            ERRORCODE: 303
+          });
+        }
+      }
+      if (response.ads.length === 0) {
+        response = null;
+      }
+      return cb(error, response);
+    };
+    loopIndex = response.ads.length;
+    while (loopIndex--) {
+      ad = response.ads[loopIndex];
+      if (ad.nextWrapperURL == null) {
+        continue;
+      }
+      (function(ad) {
+        var ref2;
+        if (parentURLs.length > (options.wrapperLimit !== null ? options.wrapperLimit : 9) || (ref2 = ad.nextWrapperURL, indexOf.call(parentURLs, ref2) >= 0)) {
+          VASTParser.track(ad.errorURLTemplates, {
+            ERRORCODE: 302
+          });
+          response.ads.splice(response.ads.indexOf(ad), 1);
+          complete(new Error("Wrapper limit reached, as defined by the video player"));
+          return;
+        }
+        if (url != null) {
+          ad.nextWrapperURL = VASTParser.resolveVastAdTagURI(ad.nextWrapperURL, url);
+        }
+        return VASTParser._parse(ad.nextWrapperURL, parentURLs, options, function(err, wrappedResponse) {
+          var errorAlreadyRaised, index, k, len2, ref3, wrappedAd;
+          errorAlreadyRaised = false;
+          if (err != null) {
+            VASTParser.track(ad.errorURLTemplates, {
+              ERRORCODE: 301
+            });
+            response.ads.splice(response.ads.indexOf(ad), 1);
+            errorAlreadyRaised = true;
+          } else if (wrappedResponse == null) {
+            VASTParser.track(ad.errorURLTemplates, {
+              ERRORCODE: 303
+            });
+            response.ads.splice(response.ads.indexOf(ad), 1);
+            errorAlreadyRaised = true;
+          } else {
+            response.errorURLTemplates = response.errorURLTemplates.concat(wrappedResponse.errorURLTemplates);
+            index = response.ads.indexOf(ad);
+            response.ads.splice(index, 1);
+            ref3 = wrappedResponse.ads;
+            for (k = 0, len2 = ref3.length; k < len2; k++) {
+              wrappedAd = ref3[k];
+              VASTParser.mergeWrapperAdData(wrappedAd, ad);
+              response.ads.splice(++index, 0, wrappedAd);
+            }
+          }
+          delete ad.nextWrapperURL;
+          return complete(err, errorAlreadyRaised);
+        });
+      })(ad);
+    }
+    return complete();
+  };
+
+  VASTParser.resolveVastAdTagURI = function(vastAdTagUrl, originalUrl) {
+    var baseURL, protocol;
+    if (vastAdTagUrl.indexOf('//') === 0) {
+      protocol = location.protocol;
+      return "" + protocol + vastAdTagUrl;
+    }
+    if (vastAdTagUrl.indexOf('://') === -1) {
+      baseURL = originalUrl.slice(0, originalUrl.lastIndexOf('/'));
+      return baseURL + "/" + vastAdTagUrl;
+    }
+    return vastAdTagUrl;
+  };
+
+  VASTParser.mergeWrapperAdData = function(wrappedAd, ad) {
+    var base, creative, eventName, i, j, k, l, len, len1, len2, len3, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, results, urls;
+    wrappedAd.errorURLTemplates = ad.errorURLTemplates.concat(wrappedAd.errorURLTemplates);
+    wrappedAd.impressionURLTemplates = ad.impressionURLTemplates.concat(wrappedAd.impressionURLTemplates);
+    wrappedAd.extensions = ad.extensions.concat(wrappedAd.extensions);
+    ref = wrappedAd.creatives;
+    for (i = 0, len = ref.length; i < len; i++) {
+      creative = ref[i];
+      if (((ref1 = ad.trackingEvents) != null ? ref1[creative.type] : void 0) != null) {
+        ref2 = ad.trackingEvents[creative.type];
+        for (eventName in ref2) {
+          urls = ref2[eventName];
+          (base = creative.trackingEvents)[eventName] || (base[eventName] = []);
+          creative.trackingEvents[eventName] = creative.trackingEvents[eventName].concat(urls);
+        }
+      }
+    }
+    if ((ref3 = ad.videoClickTrackingURLTemplates) != null ? ref3.length : void 0) {
+      ref4 = wrappedAd.creatives;
+      for (j = 0, len1 = ref4.length; j < len1; j++) {
+        creative = ref4[j];
+        if (creative.type === 'linear') {
+          creative.videoClickTrackingURLTemplates = creative.videoClickTrackingURLTemplates.concat(ad.videoClickTrackingURLTemplates);
+        }
+      }
+    }
+    if ((ref5 = ad.videoCustomClickURLTemplates) != null ? ref5.length : void 0) {
+      ref6 = wrappedAd.creatives;
+      for (k = 0, len2 = ref6.length; k < len2; k++) {
+        creative = ref6[k];
+        if (creative.type === 'linear') {
+          creative.videoCustomClickURLTemplates = creative.videoCustomClickURLTemplates.concat(ad.videoCustomClickURLTemplates);
+        }
+      }
+    }
+    if (ad.videoClickThroughURLTemplate != null) {
+      ref7 = wrappedAd.creatives;
+      results = [];
+      for (l = 0, len3 = ref7.length; l < len3; l++) {
+        creative = ref7[l];
+        if (creative.type === 'linear' && (creative.videoClickThroughURLTemplate == null)) {
+          results.push(creative.videoClickThroughURLTemplate = ad.videoClickThroughURLTemplate);
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    }
   };
 
   VASTParser.childByName = function(node, name) {
@@ -1423,7 +1459,7 @@ VASTParser = (function() {
     }
     minutes = parseInt(durationComponents[1] * 60);
     hours = parseInt(durationComponents[0] * 60 * 60);
-    if (isNaN(hours || isNaN(minutes || isNaN(seconds || minutes > 60 * 60 || seconds > 60)))) {
+    if (isNaN(hours) || isNaN(minutes) || isNaN(seconds) || minutes > 60 * 60 || seconds > 60) {
       return -1;
     }
     return hours + minutes + seconds;
