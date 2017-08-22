@@ -1,7 +1,7 @@
 {
   "name": "vast-client",
   "author": "Olivier Poitrey <rs@dailymotion.com>",
-  "version": "1.8.0",
+  "version": "1.8.0-fyber",
   "description": "Javascript VAST Client",
   "keywords": [
     "vast",
